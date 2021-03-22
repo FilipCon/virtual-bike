@@ -1,0 +1,10 @@
+.cache/
+.vscode/
+obj/
+Logs/
+Library/
+Temp/
+Assets/Video/
+*.csproj
+*.sln
+*.meta

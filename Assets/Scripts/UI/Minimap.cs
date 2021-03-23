@@ -9,9 +9,9 @@ using UnityEngine.Tilemaps;
 public class Minimap : MonoBehaviour
 {
     [SerializeField] private int _zoom = 13;
+    public Tilemap tilemap;
 
     private readonly string[] _serverEndpoints = { "a", "b", "c" };
-    public Tilemap _tilemap = new Tilemap();
 
     // Start is called before the first frame update
     void Start()
@@ -41,65 +41,38 @@ public class Minimap : MonoBehaviour
                     (string error) =>
                     {
                         // Net error.
-                        Debug.Log("Error: " + error);
+                        // Debug.Log("Error: " + error);
                     }, (Texture2D texture2D) =>
                     {
                         // Save Image
-                        var savePath = Path.Combine(tilesDataPath, "Tiles", $"{_zoom}/{tile.X}/{tile.Y}.png");
-                        ImageLoader.saveImage(savePath, texture2D.EncodeToPNG());
+                        ImageLoader.SaveImage(savePath, texture2D.EncodeToPNG());
                         tileTexList.Add((tile.X, -tile.Y, texture2D));
                     });
             }
             else
             {
                 // Load map tile png from file.
-                Texture2D tex = new Texture2D(1, 1); // size does not matter.
-                tex.LoadImage(ImageLoader.loadImage(savePath));
+                var tex = new Texture2D(1, 1); // size does not matter.
+                tex.LoadImage(ImageLoader.LoadImage(savePath));
                 tileTexList.Add((tile.X, -tile.Y, tex));
             }
         }
 
+        // build tilemap from osm tiles
         Vector3Int[] positions = new Vector3Int[tiles.Count];
         TileBase[] tileArray = new TileBase[positions.Length];
         for (int i = 0; i < positions.Length; ++i)
         {
             var newTile = ScriptableObject.CreateInstance<UnityEngine.Tilemaps.Tile>();
             var tex = tileTexList[i].texture;
-            newTile.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0, 0));
+            newTile.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0, 0), Math.Max(tex.width, tex.height));
             positions[i] = new Vector3Int(tileTexList[i].X - tiles.XMin, tileTexList[i].Y + tiles.YMax, 0);
             tileArray[i] = newTile;
+
+            Debug.Log(positions[i].ToString());
         }
-
-        _tilemap.SetTiles(positions, tileArray);
-        GetComponent<RawImage>().texture = TilemapToTexture2D.Convert(_tilemap);
+        tilemap.SetTiles(positions, tileArray);
     }
-
-
-    // static public Texture2D CreateTexture2DFromTilemap(Tilemap tilemap)
-    // {
-
-    //     int tileCellSizeX = (int)tilemap.cellSize.x;
-    //     int tileCellSizeY = (int)tilemap.cellSize.y;
-    //     Texture2D output = new Texture2D(tilemap.GridWidth * tilePxSizeX, tilemap.GridHeight * tilePxSizeY, TextureFormat.ARGB32, false);
-    //     output.filterMode = FilterMode.Point;
-    //     output.SetPixels32(new Color32[output.width * output.height]);
-    //     output.Apply();
-    //     Texture2D atlasTexture = tilemap.Tileset.AtlasTexture;
-    //     System.Action<Tilemap, int, int, uint> action = (Tilemap source, int gridX, int gridY, uint tileData) =>
-    //     {
-    //         gridX -= source.MinGridX;
-    //         gridY -= source.MinGridY;
-    //         Tile tile = tilemap.Tileset.GetTile(Tileset.GetTileIdFromTileData(tileData));
-    //         if (tile != null)
-    //         {
-    //             Color[] srcTileColors = atlasTexture.GetPixels(Mathf.RoundToInt(tile.uv.x * atlasTexture.width), Mathf.RoundToInt(tile.uv.y * atlasTexture.height), tilePxSizeX, tilePxSizeY);
-    //             output.SetPixels(gridX * tilePxSizeX, gridY * tilePxSizeY, tilePxSizeX, tilePxSizeY, srcTileColors);
-    //         }
-    //     };
-    //     IterateTilemapWithAction(tilemap, action);
-    //     output.Apply();
-    //     return output;
-    // }
 
     // Update is called once per frame
     void Update()

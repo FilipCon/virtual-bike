@@ -4,7 +4,7 @@ obj/
 Logs/
 Library/
 Temp/
-Assets/Video/
+Assets/Resources/Video/
 *.csproj
 *.sln
 *.meta

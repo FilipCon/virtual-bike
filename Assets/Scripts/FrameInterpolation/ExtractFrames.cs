@@ -8,12 +8,21 @@ using UnityEngine.Video;
 public class ExtractFrames : MonoBehaviour
 {
 
-    [DllImport("FrameInterpolation")]
-    private static extern IntPtr interpolate(byte[] image0, byte[] image1,
-                                             int width, int height, double t);
+    [DllImport("FrameInterpolation"]
+    public static extern void interpolate(Color32[] image0, Color32[] image1,
+                                         int width, int height, double t);
 
     [DllImport("FrameInterpolation")]
-    public static extern void freeMem(IntPtr ptr);
+    private static extern void GetRawImageBytes(IntPtr data, int width, int height);
+
+    private Texture2D tex;
+    private Color32[] pixel32;
+
+    private GCHandle pixelHandle;
+    private IntPtr pixelPtr;
+
+    // [DllImport("FrameInterpolation", EntryPoint = "freeMem")]
+    // public static extern void freeMem(IntPtr ptr);
 
     public Renderer renderer;
     public UnityEngine.Video.VideoPlayer videoPlayer;
@@ -70,26 +79,42 @@ public class ExtractFrames : MonoBehaviour
         int h = firstTex2D.height;
 
         double t = 0.5;
-        IntPtr returnedPtr = interpolate(firstTex2D.GetRawTextureData(),
-                                         firstTex2D.GetRawTextureData(), w, h, t);
+        var image0 = secondTex2D.GetPixels32();
+        var image1 = firstTex2D.GetPixels32();
 
-        byte[] returnedResult = new byte[firstTex2D.GetRawTextureData().Length];
-        Marshal.Copy(returnedPtr, returnedResult, 0, firstTex2D.GetRawTextureData().Length);
-        freeMem(returnedPtr);
+
+        interpolate(image0, image1, w, h, t);
+        // byte[] returnedResult = new byte[firstTex2D.GetRawTextureData().Length];
+        // Marshal.Copy(returnedPtr, returnedResult, 0, firstTex2D.GetRawTextureData().Length);
+        // freeMem(returnedPtr);
 
         // Texture2D temp = new Texture2D(w, h);
         // temp.LoadImage(returnedResult);
         // temp.Apply();
         // renderer.material.mainTexture = (Texture)(temp);
 
-        // previousTexture = source.texture;
+        tex = secondTex2D;
+        //Pin pixel32 array
+        pixelHandle = GCHandle.Alloc(image0, GCHandleType.Pinned);
+        //Get the pinned address
+        pixelPtr = pixelHandle.AddrOfPinnedObject();
 
-        // renderer.material.mainTexture = source.texture;
+        previousTexture = source.texture;
+
+        renderer.material.mainTexture = source.texture;
 
 
         // StartCoroutine(WaitForRenderTexture());
     }
 
+    void MatToTexture2D()
+    {
+        //Convert Mat to Texture2D
+        GetRawImageBytes(pixelPtr, tex.width, tex.height);
+        //Update the Texture2D with array updated in C++
+        tex.SetPixels32(pixel32);
+        tex.Apply();
+    }
 
     public Texture2D toTexture2D(RenderTexture rTex)
     {
@@ -118,6 +143,15 @@ public class ExtractFrames : MonoBehaviour
             deltaTime = 0.0f;
 
         }
+
+    }
+
+
+
+    void OnApplicationQuit()
+    {
+        //Free handle
+        pixelHandle.Free();
     }
 
 }

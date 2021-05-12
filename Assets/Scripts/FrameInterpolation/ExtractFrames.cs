@@ -1,28 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.Video;
 
 public class ExtractFrames : MonoBehaviour
 {
-
-    [DllImport("FrameInterpolation"]
-    public static extern void interpolate(Color32[] image0, Color32[] image1,
-                                         int width, int height, double t);
-
     [DllImport("FrameInterpolation")]
-    private static extern void GetRawImageBytes(IntPtr data, int width, int height);
-
-    private Texture2D tex;
-    private Color32[] pixel32;
-
-    private GCHandle pixelHandle;
-    private IntPtr pixelPtr;
-
-    // [DllImport("FrameInterpolation", EntryPoint = "freeMem")]
-    // public static extern void freeMem(IntPtr ptr);
+    public static extern void interpolate(Color32[] image0, Color32[] image1,
+                                          Color32[] interpolatedImage,
+                                          int width, int height, double t);
 
     public Renderer renderer;
     public UnityEngine.Video.VideoPlayer videoPlayer;
@@ -34,8 +23,6 @@ public class ExtractFrames : MonoBehaviour
     bool isPreviousTextureSet = false;
 
     double deltaTime = 0.0f;
-
-
 
     void Start()
     {
@@ -55,75 +42,82 @@ public class ExtractFrames : MonoBehaviour
 
     private void OnErrorReceived(UnityEngine.Video.VideoPlayer source, string message)
     {
-        Debug.Log("VideoPlayer Error: " + message);
+        UnityEngine.Debug.Log("VideoPlayer Error: " + message);
     }
 
     private void OnFrameReady(UnityEngine.Video.VideoPlayer source, long frameIdx)
     {
+        double t = 0.5;
+        Interpolate(videoPlayer, t);
+    }
+
+    void Interpolate(UnityEngine.Video.VideoPlayer source, double t)
+    {
         // prevFrameIndex = frameIdx;
+        var prevTex2D = toTexture2D((RenderTexture)previousTexture);
+        var currTex2D = toTexture2D((RenderTexture)source.texture);
+
+        var interTex = InterpolateFrames(currTex2D, prevTex2D, t);
+
+        previousTexture = source.texture;
+        renderer.material.mainTexture = interTex;
     }
 
     private void OnPrepareCompleted(UnityEngine.Video.VideoPlayer source)
     {
-
         if (!isPreviousTextureSet)
         {
             previousTexture = source.texture;
             isPreviousTextureSet = true;
         }
-
-        var firstTex2D = toTexture2D((RenderTexture)previousTexture);
-        var secondTex2D = toTexture2D((RenderTexture)source.texture);
-
-        int w = firstTex2D.width;
-        int h = firstTex2D.height;
-
-        double t = 0.5;
-        var image0 = secondTex2D.GetPixels32();
-        var image1 = firstTex2D.GetPixels32();
-
-
-        interpolate(image0, image1, w, h, t);
-        // byte[] returnedResult = new byte[firstTex2D.GetRawTextureData().Length];
-        // Marshal.Copy(returnedPtr, returnedResult, 0, firstTex2D.GetRawTextureData().Length);
-        // freeMem(returnedPtr);
-
-        // Texture2D temp = new Texture2D(w, h);
-        // temp.LoadImage(returnedResult);
-        // temp.Apply();
-        // renderer.material.mainTexture = (Texture)(temp);
-
-        tex = secondTex2D;
-        //Pin pixel32 array
-        pixelHandle = GCHandle.Alloc(image0, GCHandleType.Pinned);
-        //Get the pinned address
-        pixelPtr = pixelHandle.AddrOfPinnedObject();
-
-        previousTexture = source.texture;
-
-        renderer.material.mainTexture = source.texture;
-
-
         // StartCoroutine(WaitForRenderTexture());
     }
 
-    void MatToTexture2D()
+    Texture2D InterpolateFrames(Texture2D currentTex, Texture2D previousTex, double t)
     {
-        //Convert Mat to Texture2D
-        GetRawImageBytes(pixelPtr, tex.width, tex.height);
-        //Update the Texture2D with array updated in C++
-        tex.SetPixels32(pixel32);
+        // get width/height
+        int w = currentTex.width;
+        int h = currentTex.height;
+
+        // create new texture2D
+        var interpolatedTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+
+        // get pixels from textures
+        var prevPixels = previousTex.GetPixels32();
+        var currPixels = currentTex.GetPixels32();
+        var interPixels = interpolatedTex.GetPixels32();
+
+        // interpolate with external plugin
+        var stopwatch = Stopwatch.StartNew();
+        interpolate(prevPixels, currPixels, interPixels, w, h, t);
+        UnityEngine.Debug.Log(stopwatch.ElapsedMilliseconds);
+
+        // set interpolated pixels in the new texture and apply
+        interpolatedTex.SetPixels32(interPixels);
+        interpolatedTex.Apply();
+
+        return interpolatedTex;
+    }
+
+    Texture2D toTexture2D(RenderTexture rTex)
+    {
+        Texture2D tex = new Texture2D(rTex.width, rTex.height, TextureFormat.RGBA32, false);
+
+        // Remember currently active render texture
+        RenderTexture currentActiveRT = RenderTexture.active;
+
+        // make rTex active
+        RenderTexture.active = rTex;
+
+        // read pixels to tex2D and apply
+        tex.ReadPixels(new Rect(0, 0, rTex.width, rTex.height), 0, 0);
         tex.Apply();
+
+        // reset active rt before return
+        RenderTexture.active = currentActiveRT;
+        return tex;
     }
 
-    public Texture2D toTexture2D(RenderTexture rTex)
-    {
-        Texture2D dest = new Texture2D(rTex.width, rTex.height, TextureFormat.RGBA32, false);
-
-        Graphics.CopyTexture(rTex, dest);
-
-        return dest;
-    }
     // IEnumerator WaitForRenderTexture()
     // {
     //     yield return new WaitUntil(() => videoPlayer.isPrepared);
@@ -143,15 +137,5 @@ public class ExtractFrames : MonoBehaviour
             deltaTime = 0.0f;
 
         }
-
     }
-
-
-
-    void OnApplicationQuit()
-    {
-        //Free handle
-        pixelHandle.Free();
-    }
-
 }

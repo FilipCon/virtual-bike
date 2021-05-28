@@ -3,27 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SlideHandler : MonoBehaviour
+// Progress bar of the recorded track/video.
+public class TrackProgress : MonoBehaviour
 {
-	public Slider slider;
-	public Text percentage_txt;
+    public Slider slider;  // progress slider
+    [SerializeField] ExtractFrames video;
 
-	IEnumerator Start() {
-		slider.value = 0.0f;
-		float value = 0.0f;
-		
-		while (value<=100.0f)
-		{
-			yield return new WaitForSeconds(1.0f);
-			UpdateSlider(value);
-			value += 10.0f;
-		}
+    float value = 0.0f;
+    double time;
+    double duration;
 
-	}
+    void Start()
+    {
+        duration = video.videoPlayer.length;
+        slider.value = 0.0f;
+        slider.maxValue = (float)duration;
+        slider.minValue = 0;
+    }
 
-	void UpdateSlider(float value) {
-		slider.value = value;
-		percentage_txt.text = slider.value.ToString();
-	}
-	
+    void Update()
+    {
+        // Update the progress bar only when spacebar is pressed.
+        // TODO combine with an analogue (pedal) controller to control the
+        // progress bar/video speed
+        time = video.videoPlayer.time;
+        if (value <= duration)
+        {
+            slider.value = value;
+            value = (float)time;
+        }
+    }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ImageLoader
 {
+    // Save image to dir
     public static void SaveImage(string path, byte[] imageBytes)
     {
         try
@@ -21,6 +22,7 @@ public class ImageLoader
         }
     }
 
+    // Load image from path
     public static byte[] LoadImage(string path)
     {
         byte[] dataByte = null;

@@ -6,7 +6,9 @@ using UnityEngine.Networking;
 public static class WebRequests
 {
 
-    private class WebRequestsMonoBehaviour : MonoBehaviour { }
+    private class WebRequestsMonoBehaviour : MonoBehaviour
+    {
+    }
 
     private static WebRequestsMonoBehaviour webRequestsMonoBehaviour;
 

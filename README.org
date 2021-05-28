@@ -1,2 +1,114 @@
+#+Title: Virtual Bike Project
+#+Author: Filip Konstantinos
+#+Email: filipconstantinos@gmail.com
+
 * Virtual Bike
-** Rational
+** Project Description
+   The main idea behind this project is to create an Unity application that lets
+   the user experience a virtual bike tour recorded using a 360 camera. The user
+   will use an indoor bike setup that will control the video speed based on
+   effort and compete with other players or AI opponents. Essentially, it would
+   resemble a classic track racing game, but with bikes!
+
+   The project drew inspiration from the /Rouvy/ commercial product
+    (https://rouvy.com/en/). Some related projects available are:
+
+    - https://rouvy.com/en/
+    - https://fulgaz.com/
+    - https://www.rgtcycling.com/
+    - https://www.bkool.com/en/cycling-simulator
+    - https://www.zwift.com/eu
+    - https://www.kinomap.com/en/
+
+    Aside from the 360 video, other data will be included in the application,
+    such as bio-metric indexes from external sensors (heart-rate), GPS
+    coordinates and elevation, and other measured or estimated quantities (time,
+    speed, track progress, etc), that will be displayed on the user interface.
+
+** Current Progress
+   Here's a short demo on the current progress of the project: [[https://drive.google.com/file/d/14xPHvuKGTuoRbzQBgaTmfTyGb9HPiZ-D/view?usp=sharing][Video Link]]
+
+   - [X] In the application, a 360 video has been imported and projected on the inner
+   surface of a 3D sphere. The main camera has been placed on the center of that
+   sphere which can be dragged with the mouse (for now).
+
+   - [X] The video playback is controlled by pressing the spacebar key at the target
+   FPS set before the play-mode. A progress bar is illustrates the current time
+   and the duration of the video.
+
+   - [X] A minimap is displayed with the GPS track projected onto the actual
+   world map, which in turn is assembled with the map tiles from the
+   https://www.openstreetmap.org project. Based on the recorded GPS coordinates
+   (.gpx file format), map tiles are downloaded at the beginning of play-mode
+   and are put together in a Unity TileMap. The GPS track is rendered as a
+   LineRenderer component on top of the tilemap. A second minimap camera projects
+   its contents in RenderTexture onto the UI Canvas.
+
+** Project Organization
+
+   TODO Sub-modules
+
+#+begin_src
+    Assets
+    ├── Materials                    # Standard Material directory.
+    ├── Player                       # Contains a biker model and animation
+    ├── Plugins                      # External unmanaged (C++) Plugins (.dll or .so files)
+    ├── Prefabs                      # Prefab dir. Contains Minimap and VideoPlayer prefabs
+    ├── Resources                    # Data file.
+    │   ├── GPS_Traces               # GPX data files
+    │   └── Video                    # 360 Video files
+    ├── Scenes                       # Standard scene directory
+    ├── Scripts                      # Scripts directory
+    │   ├── ExternalLibs             # 3rd party C# libraries
+    │   │   ├── AwesomeTiles         # Lib to manage OSM tiles
+    │   │   └── GPX                  # Lib to manage .gpx data files
+    │   ├── Player                   # Player related scripts (WIP)
+    │   ├── UI                       # UI related scripts
+    │   └── Video                    # Video related scripts
+    └── Textures                     # Textures
+#+end_src
+
+** Task List
+   ... in no particular order.
+
+   - [ ] Show list of other players chart
+   - [ ] Show Statistics (Time, Speed, Km, Heart-rate, etc..)
+   - [ ] Combine track progress bar with challenge-level/elevation data.
+   - [ ] Percentage elevation signs shown on road (hard - optional, requires computer vision).
+   - [ ] Have different play-modes: 3D Simulation view / 360 POV Video view / Location in Map view.
+   - [ ] Add 3D players (bikers) animation from Infinity Bike project
+   - [ ] Add AI Opponents (simple case - let them chase way-points in map).
+   - [ ] Complete Frame Interpolation method for real-time usage.
+   - [ ] Have minimap camera follow the player during play-mode (GTA-style minimap).
+   - [ ] Have analogue input that controls the video speed.
+   - [ ] (Fill this list....)
+
+** Resources
+   Here's a list of some resources that might be useful to this project:
+   - Bike Tour 360 Videos: https://www.youtube.com/channel/UCoKeUx2CGXh7Pd8WDykE4xQ
+   - GPS Data: https://www.openstreetmap.org/traces
+   - Infinity Bike Project: https://github.com/AlexandreDoucet/InfinityBike
+   - Multi-player tutorial: https://www.youtube.com/watch?v=uh8XaC0Y5MA&list=PLXkn83W0QkfnqsK8I0RAz5AbUxfg3bOQ5
+   - 3D Terrain with Google Maps: https://www.youtube.com/watch?v=Mj7Z1P2hUWk
+   - Blender plugin: https://github.com/domlysz/BlenderGIS/wiki/Install-and-usage
+   - NASA Earth Data: https://search.earthdata.nasa.gov/search
+
+** Bugs
+   There are currently some issues with the project that I haven't been able
+   to solve. The major bugs that would need to be solved immediately are:
+
+   - Frame Interpolation: My approach on the frame interpolation, i.e., to create
+     an external plugin in (C++ code) and import the =.dll= (or =.so=) file in Unity,
+     has the disadvantage that adds additional overhead on run-time (x10 times
+     slower that the original performance in a native application).
+
+   - Downloading OSM tilemaps on application startup, may not always work
+     correctly. Perhaps, because the images are downloaded asynchronously and are
+     not available from the start, it causes the rest of the application to crush
+     because of missing information. Starting the application over and over again,
+     until all tilemaps are downloaded solves the issue, since they are load from
+     file. But this was not the desired operation.
+
+   - *NOTE*: The project was developed in a Linux OS, so compatibility with a
+     Windows setup might be uncertain. Especially, the prefabs it is probable
+     that they will have missing components when loaded on Windows.

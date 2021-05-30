@@ -10,7 +10,7 @@
   effort and compete with other players or AI opponents. Essentially, it would
   resemble a classic track racing game, but with bikes!
 
-  The project drew inspiration from the [[https://rouvy.com/en/][Rouvy]] product. Some related projects
+  The project drew inspiration from the [[https://rouvy.com/en/][Rouvy]] project. Some related projects
   available are:
 
   - [[https://fulgaz.com/][FulGaz]]
@@ -22,21 +22,18 @@
   Aside from the 360 video, other data will be included in the application, such
   as bio-metric indexes from external sensors (heart-rate), GPS coordinates and
   elevation, and other measured or estimated quantities (time, speed, track
-  progress, etc), that will be displayed on the user interface.
+  progress, etc), that will be displayed in the user interface.
 
 * Current Progress
    Here's a short demo on the current progress of the project: [[https://drive.google.com/file/d/14xPHvuKGTuoRbzQBgaTmfTyGb9HPiZ-D/view?usp=sharing][VIDEO LINK]]
 
    - [X] In the application, a 360 video has been imported and projected on the inner surface of a 3D sphere. The main camera has been placed on the center of that sphere which can be dragged with the mouse (for now).
 
-   - [X] The video playback is controlled by pressing the spacebar key at the target FPS set before the play-mode. A progress bar is illustrates the current time and the duration of the video.
+   - [X] The video playback is controlled by pressing the spacebar key and played at the target FPS set before the play-mode. A progress bar illustrates the current time and duration of the video.
 
-   - [X] A minimap is displayed with the GPS track projected onto the actual world map, which in turn is assembled with the map tiles from the [[https://www.openstreetmap.org][OpenStreetMap (OSM)]] project. Based on the recorded GPS coordinates (=.gpx= file format), map tiles are downloaded at the beginning of play-mode and are put together in a Unity =TileMap=. The GPS track is rendered as a LineRenderer component on top of the tilemap. A second minimap camera projects its contents in =RenderTexture= onto the =UI Canvas=.
+   - [X] A minimap is displayed with the GPS track projected onto the actual world map, which in turn is assembled with the map tiles from the [[https://www.openstreetmap.org][OpenStreetMap (OSM)]] project. Based on the recorded GPS coordinates (=.gpx= file format), map tiles are downloaded at the beginning of play-mode and assembled into a Unity =TileMap=. The GPS track is rendered as a =LineRenderer= component on top of the tilemap. A second minimap camera projects its contents with a =RenderTexture= onto the =UI Canvas=.
 
 * Project Organization
-
-  *TODO* Sub-modules
-
 #+begin_src
     Assets
     ├── Materials                    # Standard Material directory.
@@ -60,16 +57,17 @@
 * Task List
   ... in no particular order.
 
-  - [ ] Show list of other players chart
-  - [ ] Show Statistics (Time, Speed, Km, Heart-rate, etc..)
-  - [ ] Combine track progress bar with challenge-level/elevation data.
-  - [ ] Percentage elevation signs shown on road (hard - optional, requires computer vision).
+  - [ ] Show list of other players (chart).
+  - [ ] Show Statistics/Measurements (Time, Speed, Km, Heart-rate, etc..)
+  - [ ] Combine track progress-bar with challenge-level/elevation data.
+  - [ ] Percentage elevation signs shown on road (hard - optional, requires computer vision methods).
   - [ ] Have different play-modes: 3D Simulation view / 360 POV Video view / Location in Map view.
-  - [ ] Add 3D players (bikers) animation from Infinity Bike project
+  - [ ] Add 3D player (biker) animation from Infinity Bike project
   - [ ] Add AI Opponents (simple case - let them chase way-points in map).
-  - [ ] Complete Frame Interpolation method for real-time usage.
+  - [ ] Implement a frame interpolation method for real-time usage.
   - [ ] Have minimap camera follow the player during play-mode (GTA-style minimap).
   - [ ] Have analogue input that controls the video speed.
+  - [ ] Integrate VR setup for the 360 video navigation.
   - [ ] (Fill this list....)
 
 * Resources
@@ -84,20 +82,20 @@
 
 * Bugs
   There are currently some issues with the project that I haven't been able
-  to solve. The major bugs that would need to be solved immediately are:
+  to solve. The major bugs that need to be solved immediately are:
 
-  - Frame Interpolation: My approach on the frame interpolation, i.e., to create
+  - Frame Interpolation: My approach on frame interpolation, i.e., to create
     an external plugin in (C++ code) and import the =.dll= (or =.so=) file in Unity,
-    has the disadvantage that adds additional overhead on run-time (x10 times
+    has the disadvantage that adds overhead on run-time (x10 times
     slower that the original performance in a native application).
 
-  - Downloading OSM tilemaps on application startup, may not always work
+  - Downloading OSM tilemaps on application startup may not always work
     correctly. Perhaps, because the images are downloaded asynchronously and are
-    not available from the start, it causes the rest of the application to crush
+    not available from the start, causes the rest of the application to crush
     because of missing information. Starting the application over and over again,
-    until all tilemaps are downloaded solves the issue, since they are load from
-    file. But this was not the desired operation.
+    until all tilemaps are downloaded, solves the issue (since they are load from
+    file). But this is not the desired behavior.
 
   - *NOTE*: The project was developed in a Linux OS, so compatibility with a
-    Windows setup might be uncertain. For example, the prefabs
-    will probably have missing components when loaded on Windows.
+    Windows setup is uncertain. For example, the prefabs will probably have
+    missing components when loaded on Windows.

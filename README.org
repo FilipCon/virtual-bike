@@ -25,7 +25,7 @@
   progress, etc), that will be displayed in the user interface.
 
 * Current Progress
-   Here's a short demo on the current progress of the project: [[https://drive.google.com/file/d/14xPHvuKGTuoRbzQBgaTmfTyGb9HPiZ-D/view?usp=sharing][VIDEO LINK]]
+   Here's a short demo on the current progress of the project: [[https://drive.google.com/file/d/1-zVtGMTZcW_K-WqatVLBh4gFLxRKxUT1/view?usp=sharing][VIDEO LINK]]
 
    - [X] In the application, a 360 video has been imported and projected on the inner surface of a 3D sphere. The main camera has been placed on the center of that sphere which can be dragged with the mouse (for now).
 
